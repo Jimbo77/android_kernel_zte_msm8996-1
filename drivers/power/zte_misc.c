@@ -281,8 +281,11 @@ static void zte_misc_parse_imem(void)
 
 bool is_haptics_zte(void)
 {
-    return 1;  //ZTE  msm8996 all haptic
-    //return (is_haptics==1);
+#if defined(CONFIG_BOARD_CANDICE)
+	return 0;
+#else
+	return 1;
+#endif
 }
 
 /*************************************************
@@ -327,7 +330,7 @@ static int __init fingerprint_id_setup(char *str)
 	ret = kstrtoul(str, 10, &fingerprint_hw);
 	if (ret != 0) {
 		pr_info("%s, kstrtoul error\n", __func__);
-    }
+	}
 	pr_info("fingerprint_id =%lu\n", fingerprint_hw);
 
 	return 0;
@@ -355,6 +358,9 @@ static int zte_misc_fingerprint_hw_check(struct device *dev)
 	case FINGERPRINT_CHIPID_GOODIX_GF3258:
 		fingerprint_id_name = "GF3258";
 		break;
+	case FINGERPRINT_CHIPID_FPC:
+		fingerprint_id_name = "FPC1140";
+		break;
 	case FINGERPRINT_CHIPID_SYNAFP:
 		fingerprint_id_name = "SYNAFP";
 		break;
@@ -362,7 +368,7 @@ static int zte_misc_fingerprint_hw_check(struct device *dev)
 		fingerprint_hw = FINGERPRINT_CHIPID_GOODIX_GF3118M;
 		fingerprint_id_name = "NONE";
 		break;
-    }
+	}
 
 	pr_info("%s, fingerprint_id is :%lu name:%s\n", __func__, fingerprint_hw, fingerprint_id_name);
 
@@ -377,12 +383,18 @@ bool is_goodix_fp(void)
 
 bool is_goodix_milan_fp(void)
 {
-	return (fingerprint_hw == FINGERPRINT_CHIPID_GOODIX_GF3238);
+	return ((fingerprint_hw == FINGERPRINT_CHIPID_GOODIX_GF3238)
+		|| (fingerprint_hw == FINGERPRINT_CHIPID_GOODIX_GF3258));
 }
 
 bool is_synafp_fp(void)
 {
 	return (fingerprint_hw == FINGERPRINT_CHIPID_SYNAFP);
+}
+
+bool is_fpc_fp(void)
+{
+	return (fingerprint_hw == FINGERPRINT_CHIPID_FPC);
 }
 
 /*************************************************
@@ -493,24 +505,46 @@ module_param_call(shipmode_zte, zte_misc_control_shipmode, zte_misc_get_shipmode
 
 /*ZTE_PM end***************************************************************************/
 
+static int board_id = -1;
+
+int check_hw_id(void)
+{
+	struct device_node *np;
+	uint32_t *buf = NULL;
+
+	if (board_id == -1) {
+		np = of_find_compatible_node(NULL, NULL, "zte,imem-hw-ver-id");
+		if (!np) {
+			pr_err("unable to find DT imem zte,imem-hw-ver-id\n");
+		} else {
+			buf = (uint32_t *)of_iomap(np, 0);
+
+			if (!buf)
+				pr_err("unable to map imem [hw-ver-id]\n");
+			else
+				board_id = *buf;
+		}
+		pr_info("hw-ver board_id=%d\n", board_id);
+	}
+
+	return board_id;
+}
+
 static int zte_misc_probe(struct platform_device *pdev)
 {
-    struct device *dev = &pdev->dev;
-    int error;
+	struct device *dev = &pdev->dev;
+	int error;
 
-    pr_info("%s +++++\n",__func__);
+	error = get_devtree_pdata(dev);
+	if (error)
+		return error;
 
-    error = get_devtree_pdata(dev);
-    if (error)
-        return error;
+	zte_misc_parse_imem();
+	zte_misc_fingerprint_hw_check(dev);
+	check_hw_id();
 
-    zte_misc_parse_imem();
-    zte_misc_fingerprint_hw_check(dev);
-
-    //zte_batt_switch_init();
-
-    pr_info("%s ----\n",__func__);
-    return 0;
+	pr_info("%s ----\n", __func__);
+	return 0;
 }
 
 static int  zte_misc_remove(struct platform_device *pdev)

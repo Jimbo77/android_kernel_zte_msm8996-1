@@ -100,6 +100,16 @@ static void msm_actuator_parse_i2c_params(struct msm_actuator_ctrl_t *a_ctrl,
 	write_arr = a_ctrl->reg_tbl;
 	i2c_tbl = a_ctrl->i2c_reg_tbl;
 
+ /*
+  * by ZTE_YCM_20151102 yi.changming 400032
+  */
+ /*-----------*/
+	if (i2c_tbl == NULL) {
+		pr_err("%s: i2c_tbl is NULL , return\n", __func__);
+		return;
+	}
+ /*---400032---*/
+
 	for (i = 0; i < size; i++) {
 		if (write_arr[i].reg_write_type == MSM_ACTUATOR_WRITE_DAC) {
 			value = (next_lens_position <<

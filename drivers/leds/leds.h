@@ -55,6 +55,8 @@ static inline void *led_get_trigger_data(struct led_classdev *led_cdev)
 #define led_get_trigger_data(x) (NULL)
 #endif
 
+extern int check_hw_id(void);
+
 ssize_t led_trigger_store(struct device *dev, struct device_attribute *attr,
 			const char *buf, size_t count);
 ssize_t led_trigger_show(struct device *dev, struct device_attribute *attr,

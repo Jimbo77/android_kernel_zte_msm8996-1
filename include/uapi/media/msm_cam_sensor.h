@@ -615,5 +615,8 @@ struct sensor_init_cfg_data {
 #define VIDIOC_MSM_IR_CUT_CFG \
 	_IOWR('V', BASE_VIDIOC_PRIVATE + 15, struct msm_ir_cut_cfg_data_t)
 
+#define VIDIOC_MSM_FLASH_HW_ID \
+	_IOWR('V', BASE_VIDIOC_PRIVATE + 16, uint32_t)
+
 #endif
 
