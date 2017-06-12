@@ -18,13 +18,6 @@ RDIR=$(pwd)
 # version number
 VER=$(cat "$RDIR/VERSION")
 
-# directory containing cross-compile arm64 toolchain
-TOOLCHAIN=$HOME/build/toolchain/gcc-linaro-6.2.1-2016.11-x86_64_aarch64-linux-gnu
-
-CPU_THREADS=$(grep -c "processor" /proc/cpuinfo)
-# amount of cpu threads to use in kernel make process
-THREADS=$((CPU_THREADS + 1))
-
 ############## SCARY NO-TOUCHY STUFF ###############
 
 ABORT() {
@@ -36,7 +29,7 @@ cd "$RDIR" || ABORT "Failed to enter $RDIR!"
 
 CONTINUE=false
 export ARCH=arm64
-export CROSS_COMPILE=$TOOLCHAIN/bin/aarch64-linux-gnu-
+export CROSS_COMPILE=/home/zr3n1/Документы/buildtools/bin/aarch64-linux-gnu-
 
 [ -x "${CROSS_COMPILE}gcc" ] ||
 ABORT "Unable to find gcc cross-compiler at location: ${CROSS_COMPILE}gcc"
@@ -77,7 +70,7 @@ SETUP_BUILD() {
 
 BUILD_KERNEL() {
 	echo "Starting build for $LOCALVERSION..."
-	while ! make -C "$RDIR" O=build -j"$THREADS"; do
+	while ! make -C "$RDIR" O=build -j4; do
 		read -rp "Build failed. Retry? " do_retry
 		case $do_retry in
 			Y|y) continue ;;
